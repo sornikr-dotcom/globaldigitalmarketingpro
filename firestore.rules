@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+    function isAdmin() {
+      return verified() && request.auth.uid == "REPLACE_WITH_YOUR_ADMIN_AUTH_UID";
+    }
+
+    match /siteContent/{documentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if verified() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['displayName','email','createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if isAdmin();
+      match /updates/{updateId} {
+        allow read: if verified() && (request.auth.uid == userId || isAdmin());
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // Public visitors may submit a pending review only. They cannot self-approve it.
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if request.resource.data.keys().hasOnly([
+          'name','orderReference','rating','text','status','createdAt','submittedBy'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 10
+        && request.resource.data.text.size() <= 1200
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.status == 'pending'
+        && (request.resource.data.submittedBy == null ||
+            (signedIn() && request.resource.data.submittedBy == request.auth.uid));
+      allow update, delete: if isAdmin();
+    }
+
+    // Order/payment amounts and notes are private to the verified admin.
+    match /orders/{orderId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

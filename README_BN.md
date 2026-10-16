@@ -67,3 +67,7 @@ Admin Panel → Orders & payments-এ বাস্তব order amount এবং 
 - No direct Fiverr API integration or automatic payment verification.
 - No online payment processing, image upload, invoicing, multi-admin roles or automated review verification.
 - Public project values are manually supplied by site owner and should be described accurately.
+
+## নতুন ডিজাইন ও প্রোফাইল ছবি
+- হোমপেজে নেভি/পার্পল ব্যাকগ্রাউন্ড, নিয়ন পিঙ্ক-সায়ান অ্যাকসেন্ট এবং গোল প্রোফাইল প্লেসহোল্ডার যোগ করা হয়েছে।
+- নিজের ছবি বদলাতে `assets/profile-placeholder.svg` ফাইলটি নিজের ছবি দিয়ে প্রতিস্থাপন করুন এবং `index.html`-এ ছবির `src`-এর নাম/extension মিলিয়ে দিন।
